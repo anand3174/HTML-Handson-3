@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<!-- saved from url=(0023)file:///C:/Users/sheka/ -->
+<html dir="ltr" lang="en"><head><meta charset="utf-8">
+
+<meta name="color-scheme" content="light dark">
+<meta name="google" value="notranslate">
+
+<script>
+function addRow(name, url, isdir,
+    size, size_string, date_modified, date_modified_string) {
+  if (name == "." || name == "..")
+    return;
+
+  var root = document.location.pathname;
+  if (root.substr(-1) !== "/")
+    root += "/";
+
+  var tbody = document.getElementById("tbody");
+  var row = document.createElement("tr");
+  var file_cell = document.createElement("td");
+  var link = document.createElement("a");
+
+  link.className = isdir ? "icon dir" : "icon file";
+
+  if (isdir) {
+    name = name + "/";
+    url = url + "/";
+    size = 0;
+    size_string = "";
+  } else {
+    link.draggable = "true";
+    link.addEventListener("dragstart", onDragStart, false);
+  }
+  link.innerText = name;
+  link.href = root + url;
+
+  file_cell.dataset.value = name;
+  file_cell.appendChild(link);
+
+  row.appendChild(file_cell);
+  row.appendChild(createCell(size, size_string));
+  row.appendChild(createCell(date_modified, date_modified_string));
+
+  tbody.appendChild(row);
+}
+
+function onDragStart(e) {
+  var el = e.srcElement;
+  var name = el.innerText.replace(":", "");
+  var download_url_data = "application/octet-stream:" + name + ":" + el.href;
+  e.dataTransfer.setData("DownloadURL", download_url_data);
+  e.dataTransfer.effectAllowed = "copy";
+}
+
+function createCell(value, text) {
+  var cell = document.createElement("td");
+  cell.setAttribute("class", "detailsColumn");
+  cell.dataset.value = value;
+  cell.innerText = text;
+  return cell;
+}
+
+function start(location) {
+  var header = document.getElementById("header");
+  header.innerText = header.innerText.replace("LOCATION", location);
+
+  document.getElementById("title").innerText = header.innerText;
+}
+
+function onHasParentDirectory() {
+  var box = document.getElementById("parentDirLinkBox");
+  box.style.display = "block";
+
+  var root = document.location.pathname;
+  if (!root.endsWith("/"))
+    root += "/";
+
+  var link = document.getElementById("parentDirLink");
+  link.href = root + "..";
+}
+
+function sortTable(column) {
+  var theader = document.getElementById("theader");
+  var oldOrder = theader.cells[column].dataset.order || '1';
+  oldOrder = parseInt(oldOrder, 10)
+  var newOrder = 0 - oldOrder;
+  theader.cells[column].dataset.order = newOrder;
+
+  var tbody = document.getElementById("tbody");
+  var rows = tbody.rows;
+  var list = [], i;
+  for (i = 0; i < rows.length; i++) {
+    list.push(rows[i]);
+  }
+
+  list.sort(function(row1, row2) {
+    var a = row1.cells[column].dataset.value;
+    var b = row2.cells[column].dataset.value;
+    if (column) {
+      a = parseInt(a, 10);
+      b = parseInt(b, 10);
+      return a > b ? newOrder : a < b ? oldOrder : 0;
+    }
+
+    // Column 0 is text.
+    if (a > b)
+      return newOrder;
+    if (a < b)
+      return oldOrder;
+    return 0;
+  });
+
+  // Appending an existing child again just moves it.
+  for (i = 0; i < list.length; i++) {
+    tbody.appendChild(list[i]);
+  }
+}
+
+// Add event handlers to column headers.
+function addHandlers(element, column) {
+  element.onclick = (e) => sortTable(column);
+  element.onkeydown = (e) => {
+    if (e.key == 'Enter' || e.key == ' ') {
+      sortTable(column);
+      e.preventDefault();
+    }
+  };
+}
+
+function onLoad() {
+  addHandlers(document.getElementById('nameColumnHeader'), 0);
+  addHandlers(document.getElementById('sizeColumnHeader'), 1);
+  addHandlers(document.getElementById('dateColumnHeader'), 2);
+}
+
+window.addEventListener('DOMContentLoaded', onLoad);
+</script>
+
+<style>
+
+  h1 {
+    border-bottom: 1px solid #c0c0c0;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    white-space: nowrap;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  th {
+    cursor: pointer;
+  }
+
+  td.detailsColumn {
+    padding-inline-start: 2em;
+    text-align: end;
+    white-space: nowrap;
+  }
+
+  a.icon {
+    padding-inline-start: 1.5em;
+    text-decoration: none;
+    user-select: auto;
+  }
+
+  a.icon:hover {
+    text-decoration: underline;
+  }
+
+  a.file {
+    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMAAAAAAABupgeRAAABEElEQVR42nRRx3HDMBC846AHZ7sP54BmWAyrsP588qnwlhqw/k4v5ZwWxM1hzmGRgV1cYqrRarXoH2w2m6qqiqKIR6cPtzc3xMSML2Te7XZZlnW7Pe/91/dX47WRBHuA9oyGmRknzGDjab1ePzw8bLfb6WRalmW4ip9FDVpYSWZgOp12Oh3nXJ7nxoJSGEciteP9y+fH52q1euv38WosqA6T2gGOT44vry7BEQtJkMAMMpa6JagAMcUfWYa4hkkzAc7fFlSjwqCoOUYAF5RjHZPVCFBOtSBGfgUDji3c3jpibeEMQhIMh8NwshqyRsBJgvF4jMs/YlVR5KhgNpuBLzk0OcUiR3CMhcPaOzsZiAAA/AjmaB3WZIkAAAAASUVORK5CYII=") left top no-repeat;
+  }
+
+  a.dir {
+    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABt0lEQVR42oxStZoWQRCs2cXdHTLcHZ6EjAwnQWIkJyQlRt4Cd3d3d1n5d7q7ju1zv/q+mh6taQsk8fn29kPDRo87SDMQcNAUJgIQkBjdAoRKdXjm2mOH0AqS+PlkP8sfp0h93iu/PDji9s2FzSSJVg5ykZqWgfGRr9rAAAQiDFoB1OfyESZEB7iAI0lHwLREQBcQQKqo8p+gNUCguwCNAAUQAcFOb0NNGjT+BbUC2YsHZpWLhC6/m0chqIoM1LKbQIIBwlTQE1xAo9QDGDPYf6rkTpPc92gCUYVJAZjhyZltJ95f3zuvLYRGWWCUNkDL2333McBh4kaLlxg+aTmyL7c2xTjkN4Bt7oE3DBP/3SRz65R/bkmBRPGzcRNHYuzMjaj+fdnaFoJUEdTSXfaHbe7XNnMPyqryPcmfY+zURaAB7SHk9cXSH4fQ5rojgCAVIuqCNWgRhLYLhJB4k3iZfIPtnQiCpjAzeBIRXMA6emAqoEbQSoDdGxFUrxS1AYcpaNbBgyQBGJEOnYOeENKR/iAd1npusI4C75/c3539+nbUjOgZV5CkAU27df40lH+agUdIuA/EAgDmZnwZlhDc0wAAAABJRU5ErkJggg==") left top no-repeat;
+  }
+
+  a.up {
+    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACM0lEQVR42myTA+w1RxRHz+zftmrbdlTbtq04qRGrCmvbDWp9tq3a7tPcub8mj9XZ3eHOGQdJAHw77/LbZuvnWy+c/CIAd+91CMf3bo+bgcBiBAGIZKXb19/zodsAkFT+3px+ssYfyHTQW5tr05dCOf3xN49KaVX9+2zy1dX4XMk+5JflN5MBPL30oVsvnvEyp+18Nt3ZAErQMSFOfelCFvw0HcUloDayljZkX+MmamTAMTe+d+ltZ+1wEaRAX/MAnkJdcujzZyErIiVSzCEvIiq4O83AG7LAkwsfIgAnbncag82jfPPdd9RQyhPkpNJvKJWQBKlYFmQA315n4YPNjwMAZYy0TgAweedLmLzTJSTLIxkWDaVCVfAbbiKjytgmm+EGpMBYW0WwwbZ7lL8anox/UxekaOW544HO0ANAshxuORT/RG5YSrjlwZ3lM955tlQqbtVMlWIhjwzkAVFB8Q9EAAA3AFJ+DR3DO/Pnd3NPi7H117rAzWjpEs8vfIqsGZpaweOfEAAFJKuM0v6kf2iC5pZ9+fmLSZfWBVaKfLLNOXj6lYY0V2lfyVCIsVzmcRV9Y0fx02eTaEwhl2PDrXcjFdYRAohQmS8QEFLCLKGYA0AeEakhCCFDXqxsE0AQACgAQp5w96o0lAXuNASeDKWIvADiHwigfBINpWKtAXJvCEKWgSJNbRvxf4SmrnKDpvZavePu1K/zu/due1X/6Nj90MBd/J2Cic7WjBp/jUdIuA8AUtd65M+PzXIAAAAASUVORK5CYII=") left top no-repeat;
+  }
+
+  html[dir=rtl] a {
+    background-position-x: right;
+  }
+
+  #parentDirLinkBox {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+</style>
+
+<title id="title">Index of C:\Users\sheka\</title>
+
+</head>
+
+<body>
+
+<h1 id="header">Index of C:\Users\sheka\</h1>
+
+<div id="parentDirLinkBox" style="display: block;">
+  <a id="parentDirLink" class="icon up" href="file:///C:/Users/">
+    <span id="parentDirText">[parent directory]</span>
+  </a>
+</div>
+
+<table>
+  <thead>
+    <tr class="header" id="theader">
+      <th id="nameColumnHeader" tabindex="0" role="button">Name</th>
+      <th id="sizeColumnHeader" class="detailsColumn" tabindex="0" role="button">
+        Size
+      </th>
+      <th id="dateColumnHeader" class="detailsColumn" tabindex="0" role="button">
+        Date Modified
+      </th>
+    </tr>
+  </thead>
+  <tbody id="tbody">
+  <tr><td data-value=".android/"><a class="icon dir" href="file:///C:/Users/sheka/.android/">.android/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666208406">10/20/22, 1:10:06 AM</td></tr><tr><td data-value=".idlerc/"><a class="icon dir" href="file:///C:/Users/sheka/.idlerc/">.idlerc/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666434254">10/22/22, 3:54:14 PM</td></tr><tr><td data-value=".jdks/"><a class="icon dir" href="file:///C:/Users/sheka/.jdks/">.jdks/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1667841836">11/7/22, 10:53:56 PM</td></tr><tr><td data-value=".vscode/"><a class="icon dir" href="file:///C:/Users/sheka/.vscode/">.vscode/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666206794">10/20/22, 12:43:14 AM</td></tr><tr><td data-value="3D Objects/"><a class="icon dir" href="file:///C:/Users/sheka/3D%20Objects/">3D Objects/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202505">10/19/22, 11:31:45 PM</td></tr><tr><td data-value="AppData/"><a class="icon dir" href="file:///C:/Users/sheka/AppData/">AppData/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="Application Data/"><a class="icon dir" href="file:///C:/Users/sheka/Application%20Data/">Application Data/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="Contacts/"><a class="icon dir" href="file:///C:/Users/sheka/Contacts/">Contacts/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202506">10/19/22, 11:31:46 PM</td></tr><tr><td data-value="Cookies/"><a class="icon dir" href="file:///C:/Users/sheka/Cookies/">Cookies/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="Desktop/"><a class="icon dir" href="file:///C:/Users/sheka/Desktop/">Desktop/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1670589084">12/9/22, 6:01:24 PM</td></tr><tr><td data-value="Documents/"><a class="icon dir" href="file:///C:/Users/sheka/Documents/">Documents/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1668778810">11/18/22, 7:10:10 PM</td></tr><tr><td data-value="Downloads/"><a class="icon dir" href="file:///C:/Users/sheka/Downloads/">Downloads/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1670589573">12/9/22, 6:09:33 PM</td></tr><tr><td data-value="Favorites/"><a class="icon dir" href="file:///C:/Users/sheka/Favorites/">Favorites/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202506">10/19/22, 11:31:46 PM</td></tr><tr><td data-value="IdeaProjects/"><a class="icon dir" href="file:///C:/Users/sheka/IdeaProjects/">IdeaProjects/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1667842110">11/7/22, 10:58:30 PM</td></tr><tr><td data-value="Links/"><a class="icon dir" href="file:///C:/Users/sheka/Links/">Links/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202506">10/19/22, 11:31:46 PM</td></tr><tr><td data-value="Local Settings/"><a class="icon dir" href="file:///C:/Users/sheka/Local%20Settings/">Local Settings/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="Music/"><a class="icon dir" href="file:///C:/Users/sheka/Music/">Music/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202506">10/19/22, 11:31:46 PM</td></tr><tr><td data-value="My Documents/"><a class="icon dir" href="file:///C:/Users/sheka/My%20Documents/">My Documents/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="myproject/"><a class="icon dir" href="file:///C:/Users/sheka/myproject/">myproject/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666877980">10/27/22, 7:09:40 PM</td></tr><tr><td data-value="NetHood/"><a class="icon dir" href="file:///C:/Users/sheka/NetHood/">NetHood/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="OneDrive/"><a class="icon dir" href="file:///C:/Users/sheka/OneDrive/">OneDrive/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1670333283">12/6/22, 6:58:03 PM</td></tr><tr><td data-value="Pictures/"><a class="icon dir" href="file:///C:/Users/sheka/Pictures/">Pictures/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666525640">10/23/22, 5:17:20 PM</td></tr><tr><td data-value="PrintHood/"><a class="icon dir" href="file:///C:/Users/sheka/PrintHood/">PrintHood/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="PycharmProjects/"><a class="icon dir" href="file:///C:/Users/sheka/PycharmProjects/">PycharmProjects/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1668171513">11/11/22, 6:28:33 PM</td></tr><tr><td data-value="python django project/"><a class="icon dir" href="file:///C:/Users/sheka/python%20django%20project/">python django project/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666856126">10/27/22, 1:05:26 PM</td></tr><tr><td data-value="python django project 2/"><a class="icon dir" href="file:///C:/Users/sheka/python%20django%20project%202/">python django project 2/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666870579">10/27/22, 5:06:19 PM</td></tr><tr><td data-value="Recent/"><a class="icon dir" href="file:///C:/Users/sheka/Recent/">Recent/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="Saved Games/"><a class="icon dir" href="file:///C:/Users/sheka/Saved%20Games/">Saved Games/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202506">10/19/22, 11:31:46 PM</td></tr><tr><td data-value="Searches/"><a class="icon dir" href="file:///C:/Users/sheka/Searches/">Searches/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202589">10/19/22, 11:33:09 PM</td></tr><tr><td data-value="SendTo/"><a class="icon dir" href="file:///C:/Users/sheka/SendTo/">SendTo/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="Start Menu/"><a class="icon dir" href="file:///C:/Users/sheka/Start%20Menu/">Start Menu/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="Templates/"><a class="icon dir" href="file:///C:/Users/sheka/Templates/">Templates/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr><tr><td data-value="Videos/"><a class="icon dir" href="file:///C:/Users/sheka/Videos/">Videos/</a></td><td class="detailsColumn" data-value="0"></td><td class="detailsColumn" data-value="1666332973">10/21/22, 11:46:13 AM</td></tr><tr><td data-value="AppData - Shortcut.lnk"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/AppData%20-%20Shortcut.lnk">AppData - Shortcut.lnk</a></td><td class="detailsColumn" data-value="1090">1.1 kB</td><td class="detailsColumn" data-value="1666544436">10/23/22, 10:30:36 PM</td></tr><tr><td data-value="notepad documents.txt"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/notepad%20documents.txt">notepad documents.txt</a></td><td class="detailsColumn" data-value="425">425 B</td><td class="detailsColumn" data-value="1666958612">10/28/22, 5:33:32 PM</td></tr><tr><td data-value="NTUSER.DAT"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/NTUSER.DAT">NTUSER.DAT</a></td><td class="detailsColumn" data-value="1835008">1.8 MB</td><td class="detailsColumn" data-value="1670520020">12/8/22, 10:50:20 PM</td></tr><tr><td data-value="ntuser.dat.LOG1"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/ntuser.dat.LOG1">ntuser.dat.LOG1</a></td><td class="detailsColumn" data-value="393216">384 kB</td><td class="detailsColumn" data-value="1666202413">10/19/22, 11:30:13 PM</td></tr><tr><td data-value="ntuser.dat.LOG2"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/ntuser.dat.LOG2">ntuser.dat.LOG2</a></td><td class="detailsColumn" data-value="630784">616 kB</td><td class="detailsColumn" data-value="1666202413">10/19/22, 11:30:13 PM</td></tr><tr><td data-value="NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TM.blf"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/NTUSER.DAT%7Bc6b55ac8-503f-11ed-9995-d8c0a658efc0%7D.TM.blf">NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TM.blf</a></td><td class="detailsColumn" data-value="65536">64.0 kB</td><td class="detailsColumn" data-value="1666202416">10/19/22, 11:30:16 PM</td></tr><tr><td data-value="NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TMContainer00000000000000000001.regtrans-ms"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/NTUSER.DAT%7Bc6b55ac8-503f-11ed-9995-d8c0a658efc0%7D.TMContainer00000000000000000001.regtrans-ms">NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TMContainer00000000000000000001.regtrans-ms</a></td><td class="detailsColumn" data-value="524288">512 kB</td><td class="detailsColumn" data-value="1666202413">10/19/22, 11:30:13 PM</td></tr><tr><td data-value="NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TMContainer00000000000000000002.regtrans-ms"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/NTUSER.DAT%7Bc6b55ac8-503f-11ed-9995-d8c0a658efc0%7D.TMContainer00000000000000000002.regtrans-ms">NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TMContainer00000000000000000002.regtrans-ms</a></td><td class="detailsColumn" data-value="524288">512 kB</td><td class="detailsColumn" data-value="1666202413">10/19/22, 11:30:13 PM</td></tr><tr><td data-value="ntuser.ini"><a class="icon file" draggable="true" href="file:///C:/Users/sheka/ntuser.ini">ntuser.ini</a></td><td class="detailsColumn" data-value="20">20 B</td><td class="detailsColumn" data-value="1666202414">10/19/22, 11:30:14 PM</td></tr></tbody>
+</table>
+
+
+
+
+<script>// Copyright 2012 The Chromium Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+/**
+ * @fileoverview
+ * NOTE: This file is deprecated, and provides only the minimal LoadTimeData
+ * functions for places in the code still not using JS modules. Use
+ * load_time_data.m.js in all new code.
+ *
+ * This file defines a singleton which provides access to all data
+ * that is available as soon as the page's resources are loaded (before DOM
+ * content has finished loading). This data includes both localized strings and
+ * any data that is important to have ready from a very early stage (e.g. things
+ * that must be displayed right away).
+ *
+ * Note that loadTimeData is not guaranteed to be consistent between page
+ * refreshes (https://crbug.com/740629) and should not contain values that might
+ * change if the page is re-opened later.
+ */
+
+/** @type {!LoadTimeData} */
+// eslint-disable-next-line no-var
+var loadTimeData;
+
+class LoadTimeData {
+  constructor() {
+    /** @type {?Object} */
+    this.data_ = null;
+  }
+
+  /**
+   * Sets the backing object.
+   *
+   * Note that there is no getter for |data_| to discourage abuse of the form:
+   *
+   *     var value = loadTimeData.data()['key'];
+   *
+   * @param {Object} value The de-serialized page data.
+   */
+  set data(value) {
+    expect(!this.data_, 'Re-setting data.');
+    this.data_ = value;
+  }
+
+  /**
+   * @param {string} id An ID of a value that might exist.
+   * @return {boolean} True if |id| is a key in the dictionary.
+   */
+  valueExists(id) {
+    return id in this.data_;
+  }
+
+  /**
+   * Fetches a value, expecting that it exists.
+   * @param {string} id The key that identifies the desired value.
+   * @return {*} The corresponding value.
+   */
+  getValue(id) {
+    expect(this.data_, 'No data. Did you remember to include strings.js?');
+    const value = this.data_[id];
+    expect(typeof value !== 'undefined', 'Could not find value for ' + id);
+    return value;
+  }
+
+  /**
+   * As above, but also makes sure that the value is a string.
+   * @param {string} id The key that identifies the desired string.
+   * @return {string} The corresponding string value.
+   */
+  getString(id) {
+    const value = this.getValue(id);
+    expectIsType(id, value, 'string');
+    return /** @type {string} */ (value);
+  }
+
+  /**
+   * Returns a formatted localized string where $1 to $9 are replaced by the
+   * second to the tenth argument.
+   * @param {string} id The ID of the string we want.
+   * @param {...(string|number)} var_args The extra values to include in the
+   *     formatted output.
+   * @return {string} The formatted string.
+   */
+  getStringF(id, var_args) {
+    const value = this.getString(id);
+    if (!value) {
+      return '';
+    }
+
+    const args = Array.prototype.slice.call(arguments);
+    args[0] = value;
+    return this.substituteString.apply(this, args);
+  }
+
+  /**
+   * Returns a formatted localized string where $1 to $9 are replaced by the
+   * second to the tenth argument. Any standalone $ signs must be escaped as
+   * $$.
+   * @param {string} label The label to substitute through.
+   *     This is not an resource ID.
+   * @param {...(string|number)} var_args The extra values to include in the
+   *     formatted output.
+   * @return {string} The formatted string.
+   */
+  substituteString(label, var_args) {
+    const varArgs = arguments;
+    return label.replace(/\$(.|$|\n)/g, function(m) {
+      expect(m.match(/\$[$1-9]/), 'Unescaped $ found in localized string.');
+      return m === '$$' ? '$' : varArgs[m[1]];
+    });
+  }
+
+  /**
+   * As above, but also makes sure that the value is a boolean.
+   * @param {string} id The key that identifies the desired boolean.
+   * @return {boolean} The corresponding boolean value.
+   */
+  getBoolean(id) {
+    const value = this.getValue(id);
+    expectIsType(id, value, 'boolean');
+    return /** @type {boolean} */ (value);
+  }
+
+  /**
+   * As above, but also makes sure that the value is an integer.
+   * @param {string} id The key that identifies the desired number.
+   * @return {number} The corresponding number value.
+   */
+  getInteger(id) {
+    const value = this.getValue(id);
+    expectIsType(id, value, 'number');
+    expect(value === Math.floor(value), 'Number isn\'t integer: ' + value);
+    return /** @type {number} */ (value);
+  }
+
+  /**
+   * Override values in loadTimeData with the values found in |replacements|.
+   * @param {Object} replacements The dictionary object of keys to replace.
+   */
+  overrideValues(replacements) {
+    expect(
+        typeof replacements === 'object',
+        'Replacements must be a dictionary object.');
+    for (const key in replacements) {
+      this.data_[key] = replacements[key];
+    }
+  }
+}
+
+/**
+ * Checks condition, throws error message if expectation fails.
+ * @param {*} condition The condition to check for truthiness.
+ * @param {string} message The message to display if the check fails.
+ */
+function expect(condition, message) {
+  if (!condition) {
+    throw new Error(
+        'Unexpected condition on ' + document.location.href + ': ' + message);
+  }
+}
+
+/**
+ * Checks that the given value has the given type.
+ * @param {string} id The id of the value (only used for error message).
+ * @param {*} value The value to check the type on.
+ * @param {string} type The type we expect |value| to be.
+ */
+function expectIsType(id, value, type) {
+  expect(
+      typeof value === type, '[' + value + '] (' + id + ') is not a ' + type);
+}
+
+expect(!loadTimeData, 'should only include this file once');
+loadTimeData = new LoadTimeData();
+
+// Expose |loadTimeData| directly on |window|, since within a JS module the
+// scope is local and not all files have been updated to import the exported
+// |loadTimeData| explicitly.
+window.loadTimeData = loadTimeData;
+
+console.warn('crbug/1173575, non-JS module files deprecated.');
+</script><script>loadTimeData.data = {"header":"Index of LOCATION","headerDateModified":"Date Modified","headerName":"Name","headerSize":"Size","language":"en","parentDirText":"[parent directory]","textdirection":"ltr"};</script><script>start("C:\\Users\\sheka\\");</script>
+<script>onHasParentDirectory();</script>
+<script>addRow(".android",".android",1,0,"0 B",1666208406,"10/20/22, 1:10:06 AM");</script>
+<script>addRow(".idlerc",".idlerc",1,0,"0 B",1666434254,"10/22/22, 3:54:14 PM");</script>
+<script>addRow(".jdks",".jdks",1,0,"0 B",1667841836,"11/7/22, 10:53:56 PM");</script>
+<script>addRow(".vscode",".vscode",1,0,"0 B",1666206794,"10/20/22, 12:43:14 AM");</script>
+<script>addRow("3D Objects","3D%20Objects",1,0,"0 B",1666202505,"10/19/22, 11:31:45 PM");</script>
+<script>addRow("AppData","AppData",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("Application Data","Application%20Data",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("Contacts","Contacts",1,0,"0 B",1666202506,"10/19/22, 11:31:46 PM");</script>
+<script>addRow("Cookies","Cookies",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("Desktop","Desktop",1,0,"0 B",1670589084,"12/9/22, 6:01:24 PM");</script>
+<script>addRow("Documents","Documents",1,0,"0 B",1668778810,"11/18/22, 7:10:10 PM");</script>
+<script>addRow("Downloads","Downloads",1,0,"0 B",1670589573,"12/9/22, 6:09:33 PM");</script>
+<script>addRow("Favorites","Favorites",1,0,"0 B",1666202506,"10/19/22, 11:31:46 PM");</script>
+<script>addRow("IdeaProjects","IdeaProjects",1,0,"0 B",1667842110,"11/7/22, 10:58:30 PM");</script>
+<script>addRow("Links","Links",1,0,"0 B",1666202506,"10/19/22, 11:31:46 PM");</script>
+<script>addRow("Local Settings","Local%20Settings",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("Music","Music",1,0,"0 B",1666202506,"10/19/22, 11:31:46 PM");</script>
+<script>addRow("My Documents","My%20Documents",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("myproject","myproject",1,0,"0 B",1666877980,"10/27/22, 7:09:40 PM");</script>
+<script>addRow("NetHood","NetHood",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("OneDrive","OneDrive",1,0,"0 B",1670333283,"12/6/22, 6:58:03 PM");</script>
+<script>addRow("Pictures","Pictures",1,0,"0 B",1666525640,"10/23/22, 5:17:20 PM");</script>
+<script>addRow("PrintHood","PrintHood",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("PycharmProjects","PycharmProjects",1,0,"0 B",1668171513,"11/11/22, 6:28:33 PM");</script>
+<script>addRow("python django project","python%20django%20project",1,0,"0 B",1666856126,"10/27/22, 1:05:26 PM");</script>
+<script>addRow("python django project 2","python%20django%20project%202",1,0,"0 B",1666870579,"10/27/22, 5:06:19 PM");</script>
+<script>addRow("Recent","Recent",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("Saved Games","Saved%20Games",1,0,"0 B",1666202506,"10/19/22, 11:31:46 PM");</script>
+<script>addRow("Searches","Searches",1,0,"0 B",1666202589,"10/19/22, 11:33:09 PM");</script>
+<script>addRow("SendTo","SendTo",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("Start Menu","Start%20Menu",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("Templates","Templates",1,0,"0 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+<script>addRow("Videos","Videos",1,0,"0 B",1666332973,"10/21/22, 11:46:13 AM");</script>
+<script>addRow("AppData - Shortcut.lnk","AppData%20-%20Shortcut.lnk",0,1090,"1.1 kB",1666544436,"10/23/22, 10:30:36 PM");</script>
+<script>addRow("notepad documents.txt","notepad%20documents.txt",0,425,"425 B",1666958612,"10/28/22, 5:33:32 PM");</script>
+<script>addRow("NTUSER.DAT","NTUSER.DAT",0,1835008,"1.8 MB",1670520020,"12/8/22, 10:50:20 PM");</script>
+<script>addRow("ntuser.dat.LOG1","ntuser.dat.LOG1",0,393216,"384 kB",1666202413,"10/19/22, 11:30:13 PM");</script>
+<script>addRow("ntuser.dat.LOG2","ntuser.dat.LOG2",0,630784,"616 kB",1666202413,"10/19/22, 11:30:13 PM");</script>
+<script>addRow("NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TM.blf","NTUSER.DAT%7Bc6b55ac8-503f-11ed-9995-d8c0a658efc0%7D.TM.blf",0,65536,"64.0 kB",1666202416,"10/19/22, 11:30:16 PM");</script>
+<script>addRow("NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TMContainer00000000000000000001.regtrans-ms","NTUSER.DAT%7Bc6b55ac8-503f-11ed-9995-d8c0a658efc0%7D.TMContainer00000000000000000001.regtrans-ms",0,524288,"512 kB",1666202413,"10/19/22, 11:30:13 PM");</script>
+<script>addRow("NTUSER.DAT{c6b55ac8-503f-11ed-9995-d8c0a658efc0}.TMContainer00000000000000000002.regtrans-ms","NTUSER.DAT%7Bc6b55ac8-503f-11ed-9995-d8c0a658efc0%7D.TMContainer00000000000000000002.regtrans-ms",0,524288,"512 kB",1666202413,"10/19/22, 11:30:13 PM");</script>
+<script>addRow("ntuser.ini","ntuser.ini",0,20,"20 B",1666202414,"10/19/22, 11:30:14 PM");</script>
+</body></html>
